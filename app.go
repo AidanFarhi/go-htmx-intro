@@ -22,8 +22,22 @@ func NewTemplates() *Templates {
 	}
 }
 
-type Count struct {
-	Count int
+type Contact struct {
+	Name  string
+	Email string
+}
+
+func NewContact(name string, email string) Contact {
+	return Contact{
+		Name:  name,
+		Email: email,
+	}
+}
+
+type Contacts = []Contact
+
+type DisplayData struct {
+	Contacts Contacts
 }
 
 func main() {
@@ -31,16 +45,14 @@ func main() {
 	e := echo.New()
 	e.Use(middleware.Logger())
 
-	count := Count{Count: 0}
 	e.Renderer = NewTemplates()
 
 	e.GET("/", func(c echo.Context) error {
-		return c.Render(200, "index", count)
+		return c.Render(200, "index", nil)
 	})
 
-	e.POST("/count", func(c echo.Context) error {
-		count.Count++
-		return c.Render(200, "index", count)
+	e.POST("/contacts", func(c echo.Context) error {
+		return c.Render(200, "display", nil)
 	})
 
 	e.Logger.Fatal(e.Start(":8080"))
