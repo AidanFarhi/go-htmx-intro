@@ -12,28 +12,51 @@
     </script>
 </head>
 <body>
-    {{ template "form" . }}
+    {{ template "form" .FormData }}
     <hr>
-    {{ template "display" . }}
+    {{ template "display" .PageData }}
+    <script>
+        document.addEventListener("DOMContentLoaded", event => {
+            document.body.addEventListener("htmx:beforeSwap", evt => {
+                if (evt.detail.xhr.status == 422) {
+                    evt.detail.shouldSwap = true
+                    evt.detail.isError = false
+                }
+            })
+        })
+    </script>
 </body>
 </html>
 {{ end }}
 
 {{ block "form" . }}
-<form hx-post="/contacts">
-    name: <input type="text" name="name" />
-    email: <input type="text" email="email" />
-    <button type="submit">Create Contact</button>
-</form>
+    <form hx-swap="outerHTML" hx-post="/contacts">
+        name: <input type="text" name="name" {{ if .Values.name }} value="{{ .Values.name }}" {{ end }}/>
+        email: <input type="text" name="email" {{ if .Values.email }} value="{{ .Values.email }}" {{ end }} />
+        {{ if .Errors.email }}
+            <div style="color: red">{{ .Errors.email }}</div>
+        {{ end }}
+        <button type="submit">Create Contact</button>
+    </form>
 {{ end }}
 
 {{ block "display" . }}
-<div style="display: flex; flex-direction: column;">
-    {{ range .Contacts }}
-        <div>
-            Name: <span>{{ .Name }}</span>
-            Email: <span>{{ .Email }}</span>
-        </div>
-    {{ end }}
-</div>
+    <div id="contacts" style="display: flex; flex-direction: column;">
+        {{ range .Contacts }}
+            {{ template "contact" . }}
+        {{ end }}
+    </div>
+{{ end }}
+
+{{ block "contact" . }}
+    <div>
+        Name: <span>{{ .Name }}</span>
+        Email: <span>{{ .Email }}</span>
+    </div>
+{{ end }}
+
+{{ block "oob-contact" . }}
+    <div id="contacts" hx-swap-oob="afterbegin">
+        {{ template "contact" . }}
+    </div>
 {{ end }}
